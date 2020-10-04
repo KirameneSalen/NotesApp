@@ -1,14 +1,8 @@
 import React from 'react'
 import {IonCard, IonCardHeader, IonCardTitle, IonCardContent} from '@ionic/react'
+import { NoteProps } from './NoteProps'
 
-interface ItemProps{
-    id?: string,
-    title: string,
-    content: string,
-    media?: string;
-}
-
-const Note: React.FC<ItemProps> = ({id, title, content, media}) => {
+const Note: React.FC<NoteProps> = ({id, title, content, media}) => {
     return (
         <IonCard>
             <IonCardHeader>
