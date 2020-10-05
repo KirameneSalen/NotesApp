@@ -1,15 +1,26 @@
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonFab, IonFabButton, IonIcon } from '@ionic/react';
+import {
+    IonContent,
+    IonHeader,
+    IonPage,
+    IonTitle,
+    IonToolbar,
+    IonFab,
+    IonFabButton,
+    IonIcon,
+    IonLoading, IonList
+} from '@ionic/react';
 import { add } from 'ionicons/icons';
-import React from 'react';
+import React, {useContext} from 'react';
 import Note from './Note';
 import { getLogger } from '../core';
-import { useNotes } from './useNotes'
+import {RouteComponentProps} from "react-router";
+import {NoteContext} from "./NoteProvider";
 
-const log = getLogger('ItemsList')
+const log = getLogger('NotesList')
 
-const Home: React.FC = () => {
-  const {items, addItem} = useNotes();
-  log("ItemList render")
+const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
+  const {notes, fetching, fetchingError} = useContext(NoteContext);
+  log("NoteList render")
   return (
     <IonPage>
       <IonHeader>
@@ -18,15 +29,24 @@ const Home: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
-        {items.map(({ id, title, content}) => <Note key={id} title={title} content={content} />)}
-        <IonFab vertical="bottom" horizontal="end" slot="fixed">
-          <IonFabButton onClick={addItem}>
-            <IonIcon icon={add} />
-          </IonFabButton>
-        </IonFab>
+          <IonLoading isOpen={fetching} message="Fetching notes" />
+          {notes && (
+              <IonList>
+                  {notes.map(({ id, title, content}) =>
+                      <Note key={id} id={id} title={title} content={content} onEdit={id => history.push(`/note/${id}`)}/>)}
+              </IonList>
+          )}
+          {fetchingError && (
+              <div>{fetchingError.message || 'Failed to fetch notes'}</div>
+          )}
+          <IonFab vertical="bottom" horizontal="end" slot="fixed">
+              <IonFabButton onClick={() => history.push("/note")}>
+                  <IonIcon icon={add} />
+              </IonFabButton>
+          </IonFab>
       </IonContent>
     </IonPage>
   );
 };
 
-export default Home;
+export default NotesList;

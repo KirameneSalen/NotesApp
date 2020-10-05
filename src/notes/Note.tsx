@@ -2,9 +2,13 @@ import React from 'react'
 import {IonCard, IonCardHeader, IonCardTitle, IonCardContent} from '@ionic/react'
 import { NoteProps } from './NoteProps'
 
-const Note: React.FC<NoteProps> = ({id, title, content, media}) => {
+interface NotePropsExt extends NoteProps {
+    onEdit: (id?: string) => void;
+}
+
+const Note: React.FC<NotePropsExt> = ({id, title, content, media, onEdit}) => {
     return (
-        <IonCard>
+        <IonCard button={true} onClick={() => onEdit(id)}>
             <IonCardHeader>
                 <IonCardTitle>{title}</IonCardTitle>
             </IonCardHeader>
