@@ -4,8 +4,8 @@ import {
     IonBackButton,
     IonButton,
     IonButtons,
-    IonContent,
-    IonHeader,
+    IonContent, IonFabButton,
+    IonHeader, IonIcon,
     IonInput,
     IonLoading,
     IonPage, IonTextarea,
@@ -15,6 +15,7 @@ import {
 import React, {useContext, useEffect, useState} from "react";
 import {NoteContext} from "./NoteProvider";
 import {NoteProps} from "./NoteProps";
+import {heart, heartOutline} from "ionicons/icons";
 
 const log = getLogger('NoteEdit');
 
@@ -26,24 +27,28 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
     const {notes, saving, savingError, saveNote} = useContext(NoteContext);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
+    const [date, setDate] = useState(new Date());
+    const [favorite, setFavorite] = useState(false);
     const [showSaveToast, setShowSaveToast] = useState(false);
     const [note, setNote] = useState<NoteProps>()
     useEffect(()=>{
+        //TODO: cleanup method
         log('useEffect');
         const routeId = match.params.id || '';
         const note = notes?.find(n => String(n.id) === String(routeId));
-        log(`useEffect ${typeof routeId}`);
         setNote(note);
         if(note){
             setTitle(note.title);
             setContent(note.content);
+            setFavorite(note.favorite);
+            setDate(note.date);
         }
     }, [match.params.id, notes]);
 
     const handleSave = () => {
-
-        const editedNote = note ? { ...note, title, content } : { title, content };
+        const editedNote = note ? { ...note, title, content, date: new Date(), favorite } : { title, content, date: new Date(), favorite };
         saveNote && saveNote(editedNote).then(() =>{
+            console.log(date)
             setShowSaveToast(true);
             // history.goBack()
         });
@@ -52,6 +57,14 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
     const handleDelete = () => {
         // TODO implement delete
         history.goBack();
+    }
+
+    const toggleFav = () => {
+        setFavorite(!favorite)
+    }
+
+    const handleFav = () => {
+        toggleFav()
     }
 
     log('render');
@@ -63,6 +76,9 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
                     <IonButtons slot="end">
                         <IonButton onClick={handleSave}>Save</IonButton>
                         <IonButton onClick={handleDelete}>Delete</IonButton>
+                        <IonFabButton onClick={handleFav}>
+                            <IonIcon icon={favorite ? heart : heartOutline} />
+                        </IonFabButton>
                     </IonButtons>
                     <IonButtons slot="start">
                         <IonBackButton/>
@@ -80,7 +96,7 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
                     position="bottom"
                     isOpen={showSaveToast}
                     onDidDismiss={() => setShowSaveToast(false)}
-                    message="The note has been saved."
+                    message={`The note has been saved.`}
                     duration={200}
                 />
             </IonContent>
