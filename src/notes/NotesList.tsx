@@ -7,10 +7,10 @@ import {
     IonFab,
     IonFabButton,
     IonIcon,
-    IonLoading, IonList
+    IonLoading, IonList, IonSearchbar
 } from '@ionic/react';
 import { add } from 'ionicons/icons';
-import React, {useContext} from 'react';
+import React, {useContext, useState} from 'react';
 import Note from './Note';
 import { getLogger } from '../core';
 import {RouteComponentProps} from "react-router";
@@ -20,6 +20,7 @@ const log = getLogger('NotesList')
 
 const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
   const {notes, fetching, fetchingError} = useContext(NoteContext);
+    const [searchNote, setSearchNote] = useState<string>('');
   log("render")
   return (
     <IonPage>
@@ -29,10 +30,17 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
+          <IonSearchbar
+              value={searchNote}
+              debounce={1000}
+              onIonChange={e => setSearchNote(e.detail.value!)}>
+          </IonSearchbar>
           <IonLoading isOpen={fetching} message="Fetching notes" />
           {notes && (
               <IonList>
-                  {notes.map(({ _id, title, content, date, favorite}) =>
+                  {notes
+                      .filter(note => note.title.indexOf(searchNote) >= 0 || note.content.indexOf(searchNote) >= 0)
+                      .map(({ _id, title, content, date, favorite}) =>
                       <Note key={_id} _id={_id} title={title} content={content} date={date} favorite={favorite} onEdit={id => history.push(`/note/${id}`)}/>)}
               </IonList>
           )}
