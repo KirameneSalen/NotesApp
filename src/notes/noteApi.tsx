@@ -1,62 +1,45 @@
 import axios from 'axios';
-import { getLogger } from '../core';
+import {authConfig, baseUrl, getLogger, withLogs} from '../core';
 import { NoteProps } from './NoteProps';
 
-const log = getLogger('noteApi');
+const noteUrl = `http://${baseUrl}/api/note`;
 
-const baseUrl = 'http://localhost:8080';
-const noteUrl = `${baseUrl}/note`;
-
-interface ResponseProps<T> {
-    data: T;
+export const getNotes: (token: string) => Promise<NoteProps[]> = token => {
+    return withLogs(axios.get(noteUrl, authConfig(token)), 'getNotes');
 }
 
-function withLogs<T>(promise: Promise<ResponseProps<T>>, fnName: string): Promise<T>{
-     log(`${fnName} - started`);
-     return promise
-         .then(res => {
-             log(`${fnName} - success`);
-             return Promise.resolve(res.data);
-         })
-         .catch(err => {
-             log(`${fnName} - failed`);
-             return Promise.reject(err);
-         })
+export const createNote: (token: string, note: NoteProps) => Promise<NoteProps[]> = (token, note) => {
+    return withLogs(axios.post(noteUrl, note, authConfig(token)), 'createNote');
 }
 
-const config = {
-    headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin':  '*'
+export const updateNote: (token: string, note: NoteProps) => Promise<NoteProps[]> = (token, note) => {
+    return withLogs(axios.put(`${noteUrl}/${note._id}`, note, authConfig(token)), 'updateNote');
+}
+
+interface MessageData {
+    type: string;
+    payload: NoteProps;
+}
+
+const log = getLogger('ws');
+
+export const newWebSocket = (token: string, onMessage: (data: MessageData) => void) => {
+    const ws = new WebSocket(`ws://${baseUrl}`)
+    ws.onopen = () => {
+        log('web socket onopen');
+        ws.send(JSON.stringify({ type: 'authorization', payload: { token } }));
+    };
+    ws.onclose = () => {
+        log('web socket onclose');
+    };
+    ws.onerror = error => {
+        log('web socket onerror', error);
+    };
+    ws.onmessage = messageEvent => {
+        log('web socket onmessage');
+        onMessage(JSON.parse(messageEvent.data));
+    };
+    return () => {
+        ws.close();
     }
-}
-
-// export const getNotes: () => Promise<NoteProps[]> = () => {
-//     log('getNotes - started');
-//     return axios
-//         .get(`${baseUrl}/note`)
-//         .then(res => {
-//             log('getNotes - success');
-//             return Promise.resolve(res.data);
-//         })
-//         .catch(err => {
-//             log('getNotes - fail');
-//             return Promise.reject(err);
-//         })
-// }
-
-export const getNotes: () => Promise<NoteProps[]> = () => {
-    return withLogs(axios.get(noteUrl, config), 'getNotes');
-}
-
-// export const findNoteById: (id: string) => Promise<NoteProps> = id => {
-//     return withLogs(axios.get(`${noteUrl}/${id}`, config), 'findNoteById');
-// }
-
-export const createNote: (note: NoteProps) => Promise<NoteProps[]> = note => {
-    return withLogs(axios.post(noteUrl, note, config), 'createNote');
-}
-
-export const updateNote: (note: NoteProps) => Promise<NoteProps[]> = note => {
-    return withLogs(axios.put(`${noteUrl}/${note.id}`, note, config), 'updateNote');
 }

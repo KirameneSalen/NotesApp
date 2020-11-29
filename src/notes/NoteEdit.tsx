@@ -35,7 +35,7 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
         //TODO: cleanup method
         log('useEffect');
         const routeId = match.params.id || '';
-        const note = notes?.find(n => String(n.id) === String(routeId));
+        const note = notes?.find(n => String(n._id) === String(routeId));
         setNote(note);
         if(note){
             setTitle(note.title);
@@ -48,9 +48,8 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
     const handleSave = () => {
         const editedNote = note ? { ...note, title, content, date: new Date(), favorite } : { title, content, date: new Date(), favorite };
         saveNote && saveNote(editedNote).then(() =>{
-            console.log(date)
             setShowSaveToast(true);
-            // history.goBack()
+            //history.goBack()
         });
     }
 

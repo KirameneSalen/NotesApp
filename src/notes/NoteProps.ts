@@ -1,5 +1,5 @@
 export interface NoteProps{
-    id?: string,
+    _id?: string,
     title: string,
     content: string,
     media?: string,

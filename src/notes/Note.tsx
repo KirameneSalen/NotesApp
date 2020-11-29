@@ -3,12 +3,12 @@ import {IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle} f
 import { NoteProps } from './NoteProps'
 
 interface NotePropsExt extends NoteProps {
-    onEdit: (id?: string) => void;
+    onEdit: (_id?: string) => void;
 }
 
-const Note: React.FC<NotePropsExt> = ({id, title, content, media, date, favorite, size, onEdit}) => {
+const Note: React.FC<NotePropsExt> = ({_id, title, content, media, date, favorite, size, onEdit}) => {
     return (
-        <IonCard button={true} onClick={() => onEdit(id)}>
+        <IonCard button={true} onClick={() => onEdit(_id)}>
             <IonCardHeader>
                 <IonCardSubtitle>Last modified: {new Date(date).toDateString()}</IonCardSubtitle>
                 <IonCardTitle>{title}</IonCardTitle>

@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useReducer } from 'react';
+import React, {useCallback, useContext, useEffect, useReducer} from 'react';
 import PropTypes from 'prop-types';
 import { getLogger } from '../core';
 import { NoteProps } from './NoteProps';
-import { createNote, getNotes, updateNote } from './noteApi';
+import {createNote, getNotes, newWebSocket, updateNote} from './noteApi';
+import {AuthContext} from "../auth";
 
 const log = getLogger('NoteProvider');
 
@@ -48,7 +49,7 @@ const reducer: (state: NotesState, action: ActionProps) => NotesState =
             case SAVE_NOTE_SUCCEEDED:
                 const notes = [...(state.notes || [])];
                 const note = payload.note;
-                const index = notes.findIndex(n => n.id === note.id);
+                const index = notes.findIndex(n => n._id === note._id);
                 if (index === -1) {
                     notes.splice(0, 0, note);
                 } else {
@@ -69,11 +70,12 @@ interface NoteProviderProps {
 }
 
 export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
+    const { token } = useContext(AuthContext);
     const [state, dispatch] = useReducer(reducer, initialState);
     const { notes, fetching, fetchingError, saving, savingError } = state;
-    log("NoteProvider");
-    useEffect(getNotesEffect, []);
-    const saveNote = useCallback<SaveNoteFn>(saveNoteCallback, []);
+    useEffect(getNotesEffect, [token]);
+    useEffect(wsEffect, [token]);
+    const saveNote = useCallback<SaveNoteFn>(saveNoteCallback, [token]);
     const value = { notes, fetching, fetchingError, saving, savingError, saveNote };
     log('returns');
     return (
@@ -90,10 +92,13 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
         }
 
         async function fetchNotes() {
+            if (!token?.trim()) {
+                return;
+            }
             try {
                 log('fetchNotes started');
                 dispatch({ type: FETCH_NOTES_STARTED });
-                const notes = await getNotes();
+                const notes = await getNotes(token);
                 log('fetchNotes succeeded');
                 if (!canceled) {
                     dispatch({ type: FETCH_NOTES_SUCCEEDED, payload: { notes } });
@@ -109,12 +114,35 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
         try {
             log('saveNote started');
             dispatch({ type: SAVE_NOTE_STARTED });
-            const savedNote = await (note.id ? updateNote(note) : createNote(note));
+            const savedNote = await (note._id ? updateNote(token, note) : createNote(token, note));
             log('saveNote succeeded');
             dispatch({ type: SAVE_NOTE_SUCCEEDED, payload: { note: savedNote } });
         } catch (error) {
             log('saveNote failed');
             dispatch({ type: SAVE_NOTE_FAILED, payload: { error } });
+        }
+    }
+
+    function wsEffect() {
+        let canceled = false;
+        log('wsEffect - connecting');
+        let closeWebSocket: () => void;
+        if (token?.trim()) {
+            closeWebSocket = newWebSocket(token, message => {
+                if (canceled) {
+                    return;
+                }
+                const {type, payload: note} = message;
+                log(`ws message, item ${type}`);
+                if (type === 'created' || type === 'updated') {
+                    dispatch({type: SAVE_NOTE_SUCCEEDED, payload: {note}});
+                }
+            });
+        }
+        return () => {
+            log('wsEffect - disconnecting');
+            canceled = true;
+            closeWebSocket?.();
         }
     }
 };

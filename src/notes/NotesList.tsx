@@ -20,7 +20,7 @@ const log = getLogger('NotesList')
 
 const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
   const {notes, fetching, fetchingError} = useContext(NoteContext);
-  log("NoteList render")
+  log("render")
   return (
     <IonPage>
       <IonHeader>
@@ -32,8 +32,8 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
           <IonLoading isOpen={fetching} message="Fetching notes" />
           {notes && (
               <IonList>
-                  {notes.map(({ id, title, content, date, favorite}) =>
-                      <Note key={id} id={id} title={title} content={content} date={date} favorite={favorite} onEdit={id => history.push(`/note/${id}`)}/>)}
+                  {notes.map(({ _id, title, content, date, favorite}) =>
+                      <Note key={_id} _id={_id} title={title} content={content} date={date} favorite={favorite} onEdit={id => history.push(`/note/${id}`)}/>)}
               </IonList>
           )}
           {fetchingError && (
