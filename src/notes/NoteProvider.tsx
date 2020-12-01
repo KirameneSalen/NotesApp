@@ -96,7 +96,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
     const [toggleFavNote, setToggleFavNote] = useState<boolean>(false);
 
     useEffect(getNotesEffect, [token, page, searchNote, toggleFavNote]);
-    useEffect(resetNotes, [searchNote, toggleFavNote])
+    useEffect(resetNotes, [token, searchNote, toggleFavNote])
     useEffect(wsEffect, [token]);
     const saveNote = useCallback<SaveNoteFn>(saveNoteCallback, [token, page]);
     const value = { notes, fetching, fetchingError, page, searchNote, setSearchNote, setToggleFavNote, toggleFavNote, setPage, scrollDisabled, saving, savingError, saveNote };
@@ -124,18 +124,20 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
                 const notes =  await getPagedNotes(token, page, toggleFavNote, searchNote);
                 log(notes)
                 log('fetchNotes succeeded');
+                setScrollDisabled(false)
                 if (!canceled) {
                     dispatch({ type: FETCH_NOTES_SUCCEEDED, payload: { notes } });
                 }
             } catch (error) {
                 log('fetchNotes failed');
-                //setScrollDisabled(true)
+                setScrollDisabled(true)
                 dispatch({ type: FETCH_NOTES_FAILED, payload: { error } });
             }
         }
     }
 
     function resetNotes(){
+        setPage(0)
         dispatch({type: RESET_NOTE})
     }
 
