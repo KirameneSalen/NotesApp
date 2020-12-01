@@ -16,6 +16,21 @@ export const updateNote: (token: string, note: NoteProps) => Promise<NoteProps[]
     return withLogs(axios.put(`${noteUrl}/${note._id}`, note, authConfig(token)), 'updateNote');
 }
 
+export const getPagedNotes: (token: string,
+                             page: number,
+                             filter?: boolean,
+                             search?: string) => Promise<NoteProps[]> =
+    async (token: string, page: number, filter?: boolean, search?: string) => {
+        let url = `${noteUrl}?page=${page}`;
+        if (filter && filter) {
+            url += '&filter=' + filter;
+        }
+        if (search && search !== '') {
+            url += '&search=' + search;
+        }
+        return withLogs(axios.get(url, authConfig(token)), 'getPagedNotes')
+    };
+
 interface MessageData {
     type: string;
     payload: NoteProps;
