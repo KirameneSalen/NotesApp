@@ -7,14 +7,15 @@ import {
     IonFab,
     IonFabButton,
     IonIcon,
-    IonLoading, IonList, IonSearchbar, IonToggle, IonLabel, IonItem
+    IonLoading, IonList, IonSearchbar, IonToggle, IonLabel, IonItem, IonButton
 } from '@ionic/react';
 import {add} from 'ionicons/icons';
 import React, {useContext, useState} from 'react';
 import Note from './Note';
 import { getLogger } from '../core';
-import {RouteComponentProps} from "react-router";
+import {Redirect, RouteComponentProps} from "react-router";
 import {NoteContext} from "./NoteProvider";
+import {AuthContext} from "../auth";
 
 const log = getLogger('NotesList')
 
@@ -22,12 +23,18 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
   const {notes, fetching, fetchingError} = useContext(NoteContext);
     const [searchNote, setSearchNote] = useState<string>('');
     const [toggleFavNote, setToggleFavNote] = useState<boolean>(false);
+    const {token, logout} = useContext(AuthContext);
+    const handleLogout = () => {
+        logout?.();
+        return <Redirect to={{pathname: "/login"}}/>;
+    };
   log("render")
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
           <IonTitle>My Notes List</IonTitle>
+            <IonButton class="ion-margin-end" onClick={handleLogout}>Logout</IonButton>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
