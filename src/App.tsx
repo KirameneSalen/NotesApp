@@ -1,6 +1,6 @@
 import React from 'react';
 import { Redirect, Route } from 'react-router-dom';
-import { IonApp, IonRouterOutlet } from '@ionic/react';
+import {IonApp, IonRouterOutlet, IonTitle, IonToolbar} from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import {NoteEdit, NotesList} from "./notes";
 
@@ -24,6 +24,7 @@ import '@ionic/react/css/display.css';
 import './theme/variables.css';
 import {NoteProvider} from "./notes/NoteProvider";
 import {AuthProvider, Login, PrivateRoute} from "./auth";
+import {useNetwork} from "./core/useNetwork";
 
 const App: React.FC = () => (
   <IonApp>

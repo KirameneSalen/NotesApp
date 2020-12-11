@@ -18,21 +18,20 @@ import {
     IonInfiniteScrollContent
 } from '@ionic/react';
 import {add} from 'ionicons/icons';
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext} from 'react';
 import Note from './Note';
 import { getLogger } from '../core';
 import {Redirect, RouteComponentProps} from "react-router";
 import {NoteContext} from "./NoteProvider";
 import {AuthContext} from "../auth";
-import {getNotes} from "./noteApi";
+import {useNetwork} from "../core/useNetwork";
 
 const log = getLogger('NotesList')
 
 const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
     const {notes, fetching, fetchingError, page, setPage, scrollDisabled, searchNote, setSearchNote, toggleFavNote, setToggleFavNote} = useContext(NoteContext);
-
+    const { networkStatus } = useNetwork();
     const {token, logout} = useContext(AuthContext)
-
     const noop = () => {
     }
     const handleLogout = () => {
@@ -51,7 +50,7 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
         <IonPage>
             <IonHeader>
                 <IonToolbar>
-                    <IonTitle>My Notes List</IonTitle>
+                    <IonTitle>My Notes List - {networkStatus.connected ? "online" : "offline"}</IonTitle>
                     <IonButton slot="end" onClick={handleLogout}>Logout</IonButton>
                 </IonToolbar>
             </IonHeader>

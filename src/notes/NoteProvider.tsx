@@ -2,8 +2,10 @@ import React, {useCallback, useContext, useEffect, useReducer, useState} from 'r
 import PropTypes from 'prop-types';
 import { getLogger } from '../core';
 import { NoteProps } from './NoteProps';
-import {createNote, getNotes, getPagedNotes, newWebSocket, updateNote} from './noteApi';
+import {createNote, getPagedNotes, newWebSocket, updateNote} from './noteApi';
 import {AuthContext} from "../auth";
+import {Network} from "@capacitor/core";
+import {useNetwork} from "../core/useNetwork";
 
 const log = getLogger('NoteProvider');
 
@@ -55,7 +57,17 @@ const reducer: (state: NotesState, action: ActionProps) => NotesState =
                 return { ...state, fetching: true, fetchingError: null };
             case FETCH_NOTES_SUCCEEDED:
                 let n = state.notes || []
-                return { ...state, notes: [...n, ...payload.notes], fetching: false };
+                payload.notes
+                    .forEach((item: NoteProps) => {
+                        const index = n.findIndex((it: NoteProps) => it._id === item._id);
+                        if (index === -1) {
+                            n.push(item);
+                        } else {
+                            n[index] = item;
+                        }
+                    });
+                console.log(`PAYLOAD BITCH ${payload.notes}`)
+                return { ...state, notes: n, fetching: false };
             case FETCH_NOTES_FAILED:
                 return { ...state, fetchingError: payload.error, fetching: false };
             case SAVE_NOTE_STARTED:
@@ -86,6 +98,7 @@ interface NoteProviderProps {
 }
 
 export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
+    const { networkStatus } = useNetwork();
     const { token } = useContext(AuthContext);
     const [state, dispatch] = useReducer(reducer, initialState);
     const { notes, fetching, fetchingError, saving, savingError } = state;
@@ -95,9 +108,9 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
     const [searchNote, setSearchNote] = useState<string>('');
     const [toggleFavNote, setToggleFavNote] = useState<boolean>(false);
 
-    useEffect(getNotesEffect, [token, page, searchNote, toggleFavNote]);
+    useEffect(getNotesEffect, [token, page, searchNote, toggleFavNote, networkStatus.connected]);
     useEffect(resetNotes, [token, searchNote, toggleFavNote])
-    useEffect(wsEffect, [token]);
+    useEffect(wsEffect, [token, networkStatus.connected]);
     const saveNote = useCallback<SaveNoteFn>(saveNoteCallback, [token, page]);
     const value = { notes, fetching, fetchingError, page, searchNote, setSearchNote, setToggleFavNote, toggleFavNote, setPage, scrollDisabled, saving, savingError, saveNote };
     log('returns');
@@ -109,7 +122,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
 
     function getNotesEffect() {
         let canceled = false;
-        fetchNotes();
+        fetchNotes().then();
         return () => {
             canceled = true;
         }
@@ -121,7 +134,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
             try {
                 log('fetchNotes started');
                 dispatch({ type: FETCH_NOTES_STARTED });
-                const notes =  await getPagedNotes(token, page, toggleFavNote, searchNote);
+                const notes =  await getPagedNotes(token, page, networkStatus.connected, toggleFavNote, searchNote);
                 log(notes)
                 log('fetchNotes succeeded');
                 setScrollDisabled(false)
@@ -145,7 +158,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
         try {
             log('saveNote started');
             dispatch({ type: SAVE_NOTE_STARTED });
-            const savedNote = await (note._id ? updateNote(token, note) : createNote(token, note));
+            const savedNote = await (note._id ? updateNote(token, note, networkStatus.connected) : createNote(token, note, networkStatus.connected));
             log('saveNote succeeded');
             dispatch({ type: SAVE_NOTE_SUCCEEDED, payload: { note: savedNote } });
         } catch (error) {
@@ -155,6 +168,9 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
     }
 
     function wsEffect() {
+        if (!networkStatus.connected || token === '') {
+            return;
+        }
         let canceled = false;
         log('wsEffect - connecting');
         let closeWebSocket: () => void;

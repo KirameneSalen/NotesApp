@@ -16,6 +16,7 @@ import React, {useContext, useEffect, useState} from "react";
 import {NoteContext} from "./NoteProvider";
 import {NoteProps} from "./NoteProps";
 import {heart, heartOutline} from "ionicons/icons";
+import {useNetwork} from "../core/useNetwork";
 
 const log = getLogger('NoteEdit');
 
@@ -31,6 +32,7 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
     const [favorite, setFavorite] = useState(false);
     const [showSaveToast, setShowSaveToast] = useState(false);
     const [note, setNote] = useState<NoteProps>()
+    const { networkStatus } = useNetwork();
     useEffect(()=>{
         //TODO: cleanup method
         log('useEffect');
@@ -46,7 +48,7 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
     }, [match.params.id, notes]);
 
     const handleSave = () => {
-        const editedNote = note ? { ...note, title, content, date: new Date(), favorite } : { title, content, date: new Date(), favorite };
+        const editedNote = note ? { ...note, title, content, date: new Date(), favorite } : { title, content, date: new Date(), favorite, media: "media" };
         saveNote && saveNote(editedNote).then(() =>{
             setShowSaveToast(true);
             //history.goBack()
@@ -95,8 +97,8 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
                     position="bottom"
                     isOpen={showSaveToast}
                     onDidDismiss={() => setShowSaveToast(false)}
-                    message={`The note has been saved.`}
-                    duration={200}
+                    message={`${networkStatus.connected ? "Note was sent to the server." : "YOU ARE WORKING LOCALLY!!!"}`}
+                    duration={2000}
                 />
             </IonContent>
         </IonPage>
