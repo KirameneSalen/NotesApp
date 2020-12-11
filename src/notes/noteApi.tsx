@@ -95,7 +95,7 @@ export const getPagedNotes: (token: string,
         return getNotesLocal().then(notes => paginateAndMatch(notes, page, filter, search));
     };
 
-const PAGE_SIZE = 7;
+const PAGE_SIZE = 6;
 
 function paginateAndMatch(notes: NoteProps[], page: number, filter?: boolean, search?: string): NoteProps[] {
     if (filter) {

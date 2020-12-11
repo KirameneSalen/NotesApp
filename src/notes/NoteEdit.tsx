@@ -16,7 +16,6 @@ import React, {useContext, useEffect, useState} from "react";
 import {NoteContext} from "./NoteProvider";
 import {NoteProps} from "./NoteProps";
 import {heart, heartOutline} from "ionicons/icons";
-import {useNetwork} from "../core/useNetwork";
 
 const log = getLogger('NoteEdit');
 
@@ -25,14 +24,13 @@ interface NoteEditProps extends RouteComponentProps<{
 }> {}
 
 const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
-    const {notes, saving, savingError, saveNote} = useContext(NoteContext);
+    const {notes, saving, savingError, saveNote, networkStatus} = useContext(NoteContext);
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [date, setDate] = useState(new Date());
     const [favorite, setFavorite] = useState(false);
     const [showSaveToast, setShowSaveToast] = useState(false);
     const [note, setNote] = useState<NoteProps>()
-    const { networkStatus } = useNetwork();
     useEffect(()=>{
         //TODO: cleanup method
         log('useEffect');
@@ -97,7 +95,7 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
                     position="bottom"
                     isOpen={showSaveToast}
                     onDidDismiss={() => setShowSaveToast(false)}
-                    message={`${networkStatus.connected ? "Note was sent to the server." : "YOU ARE WORKING LOCALLY!!!"}`}
+                    message={`${networkStatus ? "Note was sent to the server." : "YOU ARE WORKING LOCALLY!!!"}`}
                     duration={2000}
                 />
             </IonContent>

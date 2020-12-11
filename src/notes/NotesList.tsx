@@ -24,13 +24,11 @@ import { getLogger } from '../core';
 import {Redirect, RouteComponentProps} from "react-router";
 import {NoteContext} from "./NoteProvider";
 import {AuthContext} from "../auth";
-import {useNetwork} from "../core/useNetwork";
 
 const log = getLogger('NotesList')
 
 const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
-    const {notes, fetching, fetchingError, page, setPage, scrollDisabled, searchNote, setSearchNote, toggleFavNote, setToggleFavNote} = useContext(NoteContext);
-    const { networkStatus } = useNetwork();
+    const {notes, fetching, fetchingError, page, setPage, scrollDisabled, searchNote, setSearchNote, toggleFavNote, setToggleFavNote, networkStatus} = useContext(NoteContext);
     const {token, logout} = useContext(AuthContext)
     const noop = () => {
     }
@@ -39,18 +37,20 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
         return <Redirect to={{pathname: "/login"}}/>;
     };
     log("render")
-
+    log(`PAGE: ${page}`)
     async function getNewNotes($event: CustomEvent<void>){
-        log('page: ', page)
+        log('scrolling to page: ', page)
         setPage ? setPage(page+1) : noop();
         ($event.target as HTMLIonInfiniteScrollElement).complete().then();
     }
+
+    log(`SCROLL DISABLED: ${scrollDisabled}`);
 
     return (
         <IonPage>
             <IonHeader>
                 <IonToolbar>
-                    <IonTitle>My Notes List - {networkStatus.connected ? "online" : "offline"}</IonTitle>
+                    <IonTitle>My Notes List - {networkStatus ? "online" : "offline"}</IonTitle>
                     <IonButton slot="end" onClick={handleLogout}>Logout</IonButton>
                 </IonToolbar>
             </IonHeader>
