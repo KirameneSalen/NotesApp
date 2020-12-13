@@ -18,7 +18,7 @@ import {
     IonInfiniteScrollContent
 } from '@ionic/react';
 import {add} from 'ionicons/icons';
-import React, {useContext} from 'react';
+import React, {useContext, useEffect} from 'react';
 import Note from './Note';
 import { getLogger } from '../core';
 import {Redirect, RouteComponentProps} from "react-router";
@@ -28,7 +28,7 @@ import {AuthContext} from "../auth";
 const log = getLogger('NotesList')
 
 const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
-    const {notes, fetching, fetchingError, page, setPage, scrollDisabled, searchNote, setSearchNote, toggleFavNote, setToggleFavNote, networkStatus} = useContext(NoteContext);
+    const {notes, fetching, fetchingError, page, setPage, scrollDisabled, searchNote, setSearchNote, toggleFavNote, setToggleFavNote, networkStatus, conflictNotes} = useContext(NoteContext);
     const {token, logout} = useContext(AuthContext)
     const noop = () => {
     }
@@ -44,6 +44,14 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
         ($event.target as HTMLIonInfiniteScrollElement).complete().then();
     }
 
+    useEffect(conflictNotesEffect, [conflictNotes]);
+
+    function conflictNotesEffect() {
+        if(conflictNotes && conflictNotes.length > 0) {
+            console.log('conflictGuitars', conflictNotes);
+            history.push('/notes/conflict');
+        }
+    }
     log(`SCROLL DISABLED: ${scrollDisabled}`);
 
     return (
@@ -73,8 +81,8 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
                         {notes
                             //.filter(note => toggleFavNote ? note.favorite === toggleFavNote : true)
                             //.filter(note => searchNote!= '' ? note.title.indexOf(searchNote) >= 0 || note.content.indexOf(searchNote) >= 0 : true)
-                            .map(({ _id, title, content, date, favorite}) =>
-                                <Note key={_id} _id={_id} title={title} content={content} date={date} favorite={favorite} onEdit={id => history.push(`/note/${id}`)}/>)}
+                            .map(note =>
+                                <Note key={note._id} note={note} onEdit={id => history.push(`/note/${id}`)}/>)}
                     </IonList>
                 )}
                 <IonInfiniteScroll threshold="100px" disabled={scrollDisabled}

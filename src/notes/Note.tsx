@@ -6,15 +6,15 @@ interface NotePropsExt extends NoteProps {
     onEdit: (_id?: string) => void;
 }
 
-const Note: React.FC<NotePropsExt> = ({_id, title, content, media, date, favorite, size, onEdit}) => {
+const Note: React.FC<{note: NoteProps, onEdit: (_id?: string) => void}> = ({note, onEdit}) => {
     return (
-        <IonCard button={true} onClick={() => onEdit(_id)}>
+        <IonCard button={true} onClick={() => onEdit(note._id)}>
             <IonCardHeader>
-                <IonCardSubtitle>Last modified: {new Date(date).toDateString()}</IonCardSubtitle>
-                <IonCardTitle>{title}</IonCardTitle>
+                <IonCardSubtitle>Last modified: {new Date(note.date).toDateString()}</IonCardSubtitle>
+                <IonCardTitle>{note.title}</IonCardTitle>
             </IonCardHeader>
             <IonCardContent>
-                {content}
+                {note.content}
             </IonCardContent>
         </IonCard>
     )

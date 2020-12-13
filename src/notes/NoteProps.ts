@@ -5,5 +5,7 @@ export interface NoteProps{
     media?: string,
     date: Date,
     favorite: boolean,
-    size?: number
+    size?: number,
+    version: number;
+    lastModified: Date;
 }

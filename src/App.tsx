@@ -24,6 +24,7 @@ import '@ionic/react/css/display.css';
 import './theme/variables.css';
 import {NoteProvider} from "./notes/NoteProvider";
 import {AuthProvider, Login, PrivateRoute} from "./auth";
+import NoteConflict from "./notes/NoteConflict";
 
 const App: React.FC = () => (
   <IonApp>
@@ -35,6 +36,7 @@ const App: React.FC = () => (
                       <PrivateRoute path="/notes" component={NotesList} exact={true}/>
                       <PrivateRoute path="/note" component={NoteEdit} exact={true}/>
                       <PrivateRoute path="/note/:id" component={NoteEdit} exact={true}/>
+                      <PrivateRoute path="/notes/conflict" component={NoteConflict} exact={true}/>
                   </NoteProvider>
                   <Route exact path="/" render={() => <Redirect to="/notes"/>}/>
               </AuthProvider>

@@ -46,7 +46,7 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
     }, [match.params.id, notes]);
 
     const handleSave = () => {
-        const editedNote = note ? { ...note, title, content, date: new Date(), favorite } : { title, content, date: new Date(), favorite, media: "media" };
+        const editedNote = note ? { ...note, title, content, date: new Date(), favorite } : { title, content, date: new Date(), favorite, media: "media", version: 0, lastModified: new Date() };
         saveNote && saveNote(editedNote).then(() =>{
             setShowSaveToast(true);
             //history.goBack()

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {AppConstants, authConfig, baseUrl, getLogger, withLogs} from '../core';
+import {AppConstants, authConfig, baseUrl, getLogger} from '../core';
 import { NoteProps } from './NoteProps';
 import {LocalStorage} from "../core/Storage";
 
@@ -18,13 +18,14 @@ export const syncData: (token: string) => Promise<NoteProps[]> = async (token: s
             });
 };
 
-export const getNotes: (token: string, isNetworkAvailable: boolean) => Promise<NoteProps[]> = (token, isNetworkAvailable) => {
-    return (isNetworkAvailable ? withLogs(axios.get(noteUrl, authConfig(token)), 'getNotes') : getNotesLocal());
-}
+// export const getNotes: (token: string, isNetworkAvailable: boolean) => Promise<NoteProps[]> = (token, isNetworkAvailable) => {
+//     return (isNetworkAvailable ? withLogs(axios.get(noteUrl, authConfig(token)), 'getNotes') : getNotesLocal());
+// }
 
 export const createNote: (token: string, note: NoteProps, isNetworkAvailable: boolean) => Promise<NoteProps> = (token, note, isNetworkAvailable) => {
     //return isNetworkAvailable ? withLogs(axios.post(noteUrl, note, authConfig(token)), 'createNote') : saveNoteLocal(note);
     if(isNetworkAvailable){
+        console.log("API create sunt online frt")
         axios.post(noteUrl, note, authConfig(token)).then(
             response => {
                 saveNoteLocal(response.data).then();
@@ -38,7 +39,9 @@ export const createNote: (token: string, note: NoteProps, isNetworkAvailable: bo
 
 export const updateNote: (token: string, note: NoteProps, isNetworkAvailable: boolean) => Promise<NoteProps> = (token, note, isNetworkAvailable) => {
     //return isNetworkAvailable ? withLogs(axios.put(`${noteUrl}/${note._id}`, note, authConfig(token)), 'updateNote') : saveNoteLocal(note);
+    console.log(`API UPDATE NETWORK ${isNetworkAvailable}`)
     if(isNetworkAvailable){
+        console.log("API update sunt online frt")
         axios.put(`${noteUrl}/${note._id}`, note, authConfig(token)).then(
             response => {
                 saveNoteLocal(response.data).then();
@@ -50,14 +53,28 @@ export const updateNote: (token: string, note: NoteProps, isNetworkAvailable: bo
     return saveNoteLocal(note);
 }
 
+function setIfModifiedSinceHeader(notes: NoteProps[], config: any): void {
+    if (notes.length === 0) return;
+    let ifModifiedSince = new Date(notes[0].lastModified);
+    notes.forEach(note => {
+        const noteModified = new Date(note.lastModified);
+        if (noteModified > ifModifiedSince) {
+            ifModifiedSince = noteModified;
+        }
+    });
+    const sec = ifModifiedSince.getSeconds();
+    ifModifiedSince.setSeconds(sec + 1);
+    config.headers['if-modified-since'] = ifModifiedSince.toUTCString();
+}
+
 export const getPagedNotes: (token: string,
                              page: number,
                              isNetworkAvailable: boolean,
                              filter?: boolean,
                              search?: string,) => Promise<NoteProps[]> =
     async (token: string, page: number, isNetworkAvailable: boolean, filter?: boolean, search?: string) => {
-    console.log(`CONNECTED: ${isNetworkAvailable}`)
         if(isNetworkAvailable) {
+            console.log(`API Network available`)
             let url = `${noteUrl}?page=${page}`;
             if (filter && filter) {
                 url += '&filter=' + filter;
@@ -67,9 +84,12 @@ export const getPagedNotes: (token: string,
             }
             const localNotes = await getNotesLocal()
                 .then(notes => paginateAndMatch(notes, page, filter, search));
+            console.log(`API ${localNotes}`);
+            setIfModifiedSinceHeader(localNotes, authConfig(token));
             return axios.get<NoteProps[]>(url, authConfig(token)).then(
                 response=>{
                     const notes = response.data;
+                    console.log(`API RESPONSE ${notes}`)
                     notes.forEach(note=>{
                         const index = localNotes.findIndex(it => it._id === note._id);
                         if(index === -1){
@@ -80,6 +100,7 @@ export const getPagedNotes: (token: string,
                         }
                         LocalStorage.set(`${AppConstants.NOTES}/${note._id}`, note).then();
                     })
+                    console.log(`API sunt gay si fac chestii`)
                     return localNotes;
                 }
             ).catch(err => {
@@ -131,9 +152,10 @@ async function getNotesLocal(customPrefix?: string): Promise<NoteProps[]> {
 }
 
 function saveNoteLocal(note: NoteProps): Promise<NoteProps> {
+    console.log("API salvam local frt")
     if (!note?._id) {
         note._id = uuidv4();
-        //note.version = 0;
+        note.version = 0;
     }
     LocalStorage.set(`${AppConstants.NOTES}/${note._id}`, note).then();
     return Promise.resolve(note);

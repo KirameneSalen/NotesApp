@@ -2,7 +2,7 @@ import React, {useCallback, useContext, useEffect, useReducer, useState} from 'r
 import PropTypes from 'prop-types';
 import { getLogger } from '../core';
 import { NoteProps } from './NoteProps';
-import {createNote, getPagedNotes, newWebSocket, updateNote} from './noteApi';
+import {createNote, getPagedNotes, newWebSocket, syncData, updateNote} from './noteApi';
 import {AuthContext} from "../auth";
 import {NetworkStatus, Plugins} from "@capacitor/core";
 
@@ -26,7 +26,8 @@ export interface NotesState {
     setSearchNote?: Function,
     toggleFavNote: boolean,
     setToggleFavNote?: Function,
-    networkStatus: boolean
+    networkStatus: boolean,
+    conflictNotes?: NoteProps[];
 }
 
 interface ActionProps {
@@ -109,18 +110,35 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
     const [networkStatus, setNetworkStatus] = useState(false)
     const [searchNote, setSearchNote] = useState<string>('');
     const [toggleFavNote, setToggleFavNote] = useState<boolean>(false);
-    useEffect(networkEffect(), [])
+    const [conflictNotes, setConflictNotes] = useState<NoteProps[]>([]);
+    useEffect(networkEffect, [token])
     useEffect(getNotesEffect, [token, page, searchNote, toggleFavNote, networkStatus]);
     useEffect(resetNotes, [token, searchNote, toggleFavNote])
     useEffect(wsEffect, [token, networkStatus]);
-    const saveNote = useCallback<SaveNoteFn>(saveNoteCallback, [token, page]);
-    const value = { notes, fetching, fetchingError, page, searchNote, setSearchNote, setToggleFavNote, toggleFavNote, setPage, scrollDisabled, saving, savingError, saveNote, networkStatus};
+    const saveNote = useCallback<SaveNoteFn>(saveNoteCallback, [token, page, networkStatus]);
+    const value = { notes,
+        fetching,
+        fetchingError,
+        page,
+        searchNote,
+        setSearchNote,
+        setToggleFavNote,
+        toggleFavNote,
+        setPage,
+        scrollDisabled,
+        saving,
+        savingError,
+        saveNote,
+        networkStatus,
+        conflictNotes};
     log('returns');
     return (
         <NoteContext.Provider value={value}>
             {children}
         </NoteContext.Provider>
     );
+
+
 
     function networkEffect() {
         const handler = Network.addListener('networkStatusChange', handleNetworkStatusChange);
@@ -131,12 +149,35 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
             handler.remove();
         }
 
-        function handleNetworkStatusChange(status: NetworkStatus) {
+        async function handleNetworkStatusChange(status: NetworkStatus) {
             console.log('useNetwork - status change', status);
             if (!canceled) {
-                setNetworkStatus(status.connected);
+                if(status.connected === true ){
+                    const conflicts = await syncData(token);
+                    setConflictNotes(conflicts);
+                    setNetworkStatus(true);
+                }
+                else {
+                    setNetworkStatus(false);
+                }
             }
         }
+        // let canceled = false;
+        // Network.addListener('networkStatusChange', async (status) => {
+        //     if (canceled) {
+        //         return;
+        //     }
+        //     const connected: boolean = status.connected;
+        //     if (connected) {
+        //         const conflicts = await syncData(token);
+        //         setConflictNotes(conflicts);
+        //     }
+        //     setNetworkStatus(connected);
+        //     console.log("Network status changed", status);
+        // });
+        // return () => {
+        //     canceled = true;
+        // };
     }
 
     function getNotesEffect() {
@@ -176,6 +217,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
     async function saveNoteCallback(note: NoteProps) {
         try {
             log('saveNote started');
+            log(`saveNote network status sent is ${networkStatus}`)
             dispatch({ type: SAVE_NOTE_STARTED });
             const savedNote = await (note._id ? updateNote(token, note, networkStatus) : createNote(token, note, networkStatus));
             log('saveNote succeeded');
