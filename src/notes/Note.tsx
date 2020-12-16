@@ -16,6 +16,7 @@ const Note: React.FC<{note: NoteProps, onEdit: (_id?: string) => void}> = ({note
             <IonCardContent>
                 {note.content}
             </IonCardContent>
+            {note.media && (<img alt={"media"} src={note.media} height={'100px'}/>)}
         </IonCard>
     )
 }

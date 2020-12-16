@@ -27,7 +27,7 @@ export interface NotesState {
     toggleFavNote: boolean,
     setToggleFavNote?: Function,
     networkStatus: boolean,
-    conflictNotes?: NoteProps[];
+    conflictNotes?: NoteProps[],
 }
 
 interface ActionProps {
@@ -69,7 +69,6 @@ const reducer: (state: NotesState, action: ActionProps) => NotesState =
                             n[index] = item;
                         }
                     });
-                console.log(`PAYLOAD BITCH ${payload.notes}`)
                 return { ...state, notes: n, fetching: false };
             case FETCH_NOTES_FAILED:
                 return { ...state, fetchingError: payload.error, fetching: false };
@@ -84,7 +83,7 @@ const reducer: (state: NotesState, action: ActionProps) => NotesState =
                 } else {
                     notes[index] = note;
                 }
-                return { ...state,  notes, saving: false };
+                return { ...state, notes: notes, saving: false };
             case SAVE_NOTE_FAILED:
                 return { ...state, savingError: payload.error, saving: false };
             case RESET_NOTE:
@@ -130,15 +129,13 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
         savingError,
         saveNote,
         networkStatus,
-        conflictNotes};
+        conflictNotes,};
     log('returns');
     return (
         <NoteContext.Provider value={value}>
             {children}
         </NoteContext.Provider>
     );
-
-
 
     function networkEffect() {
         const handler = Network.addListener('networkStatusChange', handleNetworkStatusChange);
@@ -150,7 +147,6 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
         }
 
         async function handleNetworkStatusChange(status: NetworkStatus) {
-            console.log('useNetwork - status change', status);
             if (!canceled) {
                 if(status.connected === true ){
                     const conflicts = await syncData(token);
@@ -195,7 +191,6 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
                 log('fetchNotes started');
                 dispatch({ type: FETCH_NOTES_STARTED });
                 const notes =  await getPagedNotes(token, page, networkStatus, toggleFavNote, searchNote);
-                log(notes)
                 log('fetchNotes succeeded');
                 setScrollDisabled(false)
                 if (!canceled) {
@@ -217,11 +212,10 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
     async function saveNoteCallback(note: NoteProps) {
         try {
             log('saveNote started');
-            log(`saveNote network status sent is ${networkStatus}`)
             dispatch({ type: SAVE_NOTE_STARTED });
             const savedNote = await (note._id ? updateNote(token, note, networkStatus) : createNote(token, note, networkStatus));
             log('saveNote succeeded');
-            dispatch({ type: SAVE_NOTE_SUCCEEDED, payload: { note: savedNote } });
+            dispatch({type: SAVE_NOTE_SUCCEEDED, payload: {note: savedNote}});
         } catch (error) {
             log('saveNote failed');
             dispatch({ type: SAVE_NOTE_FAILED, payload: { error } });
@@ -243,7 +237,7 @@ export const NoteProvider: React.FC<NoteProviderProps> = ({ children }) => {
                 const {type, payload: note} = message;
                 log(`ws message, item ${type}`);
                 if (type === 'created' || type === 'updated') {
-                    dispatch({type: SAVE_NOTE_SUCCEEDED, payload: {note}});
+                    dispatch({type: SAVE_NOTE_SUCCEEDED, payload: {note: note}});
                 }
             });
         }

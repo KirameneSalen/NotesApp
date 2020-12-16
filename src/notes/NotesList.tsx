@@ -29,13 +29,17 @@ const log = getLogger('NotesList')
 
 const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
     const {notes, fetching, fetchingError, page, setPage, scrollDisabled, searchNote, setSearchNote, toggleFavNote, setToggleFavNote, networkStatus, conflictNotes} = useContext(NoteContext);
-    const {token, logout} = useContext(AuthContext)
+    const {logout} = useContext(AuthContext)
     const noop = () => {
     }
     const handleLogout = () => {
         logout?.();
         return <Redirect to={{pathname: "/login"}}/>;
     };
+
+    const handleOpenMap = () => {
+        history.push('/notes/map');
+    }
     log("render")
     log(`PAGE: ${page}`)
     async function getNewNotes($event: CustomEvent<void>){
@@ -59,6 +63,7 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
             <IonHeader>
                 <IonToolbar>
                     <IonTitle>My Notes List - {networkStatus ? "online" : "offline"}</IonTitle>
+                    <IonButton onClick={handleOpenMap}>Open map</IonButton>
                     <IonButton slot="end" onClick={handleLogout}>Logout</IonButton>
                 </IonToolbar>
             </IonHeader>
