@@ -7,14 +7,10 @@ import {
     IonCardHeader,
     IonCardSubtitle,
     IonCardTitle,
-    IonCheckbox,
-    IonCol,
     IonContent,
-    IonGrid,
     IonHeader,
     IonLoading,
     IonPage,
-    IonRow,
     IonTitle,
     IonToolbar
 } from '@ionic/react';
