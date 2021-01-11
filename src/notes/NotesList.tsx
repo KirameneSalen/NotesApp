@@ -24,6 +24,7 @@ import { getLogger } from '../core';
 import {Redirect, RouteComponentProps} from "react-router";
 import {NoteContext} from "./NoteProvider";
 import {AuthContext} from "../auth";
+import {ModalMap} from "../maps/ModalMap";
 
 const log = getLogger('NotesList')
 
@@ -63,7 +64,8 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
             <IonHeader>
                 <IonToolbar>
                     <IonTitle>My Notes List - {networkStatus ? "online" : "offline"}</IonTitle>
-                    <IonButton onClick={handleOpenMap}>Open map</IonButton>
+                    <ModalMap/>
+                    {/*<IonButton onClick={handleOpenMap}>Open map</IonButton>*/}
                     <IonButton slot="end" onClick={handleLogout}>Logout</IonButton>
                 </IonToolbar>
             </IonHeader>

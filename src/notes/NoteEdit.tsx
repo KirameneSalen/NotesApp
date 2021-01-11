@@ -10,7 +10,8 @@ import {
     IonLoading,
     IonPage, IonTextarea,
     IonTitle, IonToast,
-    IonToolbar
+    IonToolbar,
+    createAnimation
 } from "@ionic/react";
 import React, {useContext, useEffect, useState} from "react";
 import {NoteContext} from "./NoteProvider";
@@ -57,6 +58,8 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
             updateMyPosition('current', note.lat, note.lng);
         }
     }, [match.params.id, notes]);
+
+    useEffect(simpleAnimation, [photo]);
 
     const handleSave = () => {
         const editedNote = note ?
@@ -119,8 +122,8 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
             <IonContent>
                 <IonInput value={title} onIonChange={e => setTitle(e.detail.value || '')}/>
                 <IonTextarea value={content} onIonChange={e => setContent(e.detail.value || '')}/>
-                {photo && (<img onClick={handlePhotoChange} src={photo} height={'100px'}/>)}
-                {!photo && (<img onClick={handlePhotoChange} src={'https://static.thenounproject.com/png/187803-200.png'} height={'100px'}/>)}
+                {photo && (<img className="img" onClick={handlePhotoChange} src={photo} height={'100px'}/>)}
+                {!photo && (<div><img className={"img-none"} onClick={handlePhotoChange} src={'https://static.thenounproject.com/png/187803-200.png'} height={'100px'}/><p>PAPA</p></div>)}
                 {log(lat2, lng2)}
                 {
 
@@ -144,6 +147,25 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
             </IonContent>
         </IonPage>
     )
+
+    function simpleAnimation() {
+        const el = document.querySelector('.img');
+        log("WEHIWUHEIWFHWIUFEH", el)
+        if (el) {
+            const animation = createAnimation()
+                .addElement(el)
+                .duration(1000)
+                .direction('alternate')
+                .iterations(Infinity)
+                .keyframes([
+                    { offset: 0, transform: 'scale(1)', opacity: '1' },
+                    {
+                        offset: 1, transform: 'scale(0.5)', opacity: '0.5'
+                    }
+                ]);
+            animation.play();
+        }
+    }
 }
 
 export default NoteEdit;

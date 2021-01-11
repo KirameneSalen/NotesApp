@@ -18,7 +18,7 @@ const NoteMaps: React.FC = () => {
                     </IonButtons>
                 </IonToolbar>
             </IonHeader>
-            <IonContent fullscreen>
+            <IonContent>
                 <IonHeader collapse="condense">
                     <IonToolbar>
                         <IonTitle size="large">All notes</IonTitle>
