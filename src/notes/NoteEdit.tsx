@@ -41,6 +41,7 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
     const [note, setNote] = useState<NoteProps>()
     const [lat, setLat] = useState(0);
     const [lng, setLng] = useState(0);
+    useEffect(chainAnimations, []);
     useEffect(()=>{
         //TODO: cleanup method
         log('useEffect');
@@ -120,8 +121,8 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent>
-                <IonInput value={title} onIonChange={e => setTitle(e.detail.value || '')}/>
-                <IonTextarea value={content} onIonChange={e => setContent(e.detail.value || '')}/>
+                <div className="title"><IonInput value={title} onIonChange={e => setTitle(e.detail.value || '')}/></div>
+                <div className="content"><IonTextarea value={content} onIonChange={e => setContent(e.detail.value || '')}/></div>
                 {photo && (<img className="img" onClick={handlePhotoChange} src={photo} height={'100px'}/>)}
                 {!photo && (<div><img className={"img-none"} onClick={handlePhotoChange} src={'https://static.thenounproject.com/png/187803-200.png'} height={'100px'}/><p>PAPA</p></div>)}
                 {log(lat2, lng2)}
@@ -158,12 +159,33 @@ const NoteEdit: React.FC<NoteEditProps> = ({ history, match }) => {
                 .direction('alternate')
                 .iterations(Infinity)
                 .keyframes([
-                    { offset: 0, transform: 'scale(1)', opacity: '1' },
                     {
-                        offset: 1, transform: 'scale(0.5)', opacity: '0.5'
+                        offset: 0, transform: 'translateX(0px)', opacity: '1'
+                    },
+                    {
+                        offset: 1, transform: 'translateX(100px)', opacity: '0.5'
                     }
                 ]);
             animation.play();
+        }
+    }
+
+    function chainAnimations() {
+        const elB = document.querySelector('.title');
+        const elC = document.querySelector('.content');
+        if (elB && elC) {
+            const animationA = createAnimation()
+                .addElement(elB)
+                .duration(1000)
+                .fromTo('transform', 'translateX(0px)', 'translateX(200px)');
+            const animationB = createAnimation()
+                .addElement(elC)
+                .duration(1000)
+                .fromTo('transform', 'translateX(0px)', 'translateX(200px)');
+            (async () => {
+                await animationA.play();
+                await animationB.play();
+            })();
         }
     }
 }

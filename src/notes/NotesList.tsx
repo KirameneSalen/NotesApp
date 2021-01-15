@@ -15,7 +15,7 @@ import {
     IonItem,
     IonButton,
     IonInfiniteScroll,
-    IonInfiniteScrollContent
+    IonInfiniteScrollContent, createAnimation
 } from '@ionic/react';
 import {add} from 'ionicons/icons';
 import React, {useContext, useEffect} from 'react';
@@ -51,6 +51,8 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
 
     useEffect(conflictNotesEffect, [conflictNotes]);
 
+    useEffect(groupAnimations, []);
+
     function conflictNotesEffect() {
         if(conflictNotes && conflictNotes.length > 0) {
             console.log('conflictGuitars', conflictNotes);
@@ -66,7 +68,7 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
                     <IonTitle>My Notes List - {networkStatus ? "online" : "offline"}</IonTitle>
                     <ModalMap/>
                     {/*<IonButton onClick={handleOpenMap}>Open map</IonButton>*/}
-                    <IonButton slot="end" onClick={handleLogout}>Logout</IonButton>
+                    <IonButton className="buton" slot="end" onClick={handleLogout}>Logout</IonButton>
                 </IonToolbar>
             </IonHeader>
             <IonContent fullscreen>
@@ -102,13 +104,29 @@ const NotesList: React.FC<RouteComponentProps> = ({ history }) => {
                     <div>{fetchingError.message || 'Failed to fetch notes'}</div>
                 )}
                 <IonFab vertical="bottom" horizontal="end" slot="fixed">
-                    <IonFabButton onClick={() => history.push("/note")}>
+                    <IonFabButton className="titlu" onClick={() => history.push("/note")}>
                         <IonIcon icon={add} />
                     </IonFabButton>
                 </IonFab>
             </IonContent>
         </IonPage>
     );
+
+    function groupAnimations() {
+        const elB = document.querySelector('.titlu');
+        const elC = document.querySelector('.buton');
+        if (elB && elC) {
+            const animationA = createAnimation()
+                .addElement(elB)
+                .fromTo('transform', 'rotate(0)', 'rotate(45deg)');
+            const animationB = createAnimation()
+                .addElement(elC)
+                .fromTo('transform', 'rotate(0)', 'rotate(45deg)');
+            const parentAnimation = createAnimation()
+                .duration(5000)
+                .addAnimation([animationA, animationB]);
+            parentAnimation.play();    }
+    }
 };
 
 export default NotesList;
